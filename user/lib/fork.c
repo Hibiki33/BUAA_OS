@@ -34,7 +34,7 @@ static void __attribute__((noreturn)) cow_entry(struct Trapframe *tf) {
 
 	/* Step 3: Allocate a new page at 'UCOW'. */
 	/* Exercise 4.13: Your code here. (3/6) */
-	syscall_mem_alloc(0, UCOW, perm);
+	syscall_mem_alloc(0, (void *)UCOW, perm);
 
 	/* Step 4: Copy the content of the faulting page at 'va' to 'UCOW'. */
 	/* Hint: 'va' may not be aligned to a page! */
@@ -43,11 +43,11 @@ static void __attribute__((noreturn)) cow_entry(struct Trapframe *tf) {
 
 	// Step 5: Map the page at 'UCOW' to 'va' with the new 'perm'.
 	/* Exercise 4.13: Your code here. (5/6) */
-	syscall_mem_map(0, UCOW, 0, va, perm);
+	syscall_mem_map(0, (void *)UCOW, 0, (void *)va, perm);
 
 	// Step 6: Unmap the page at 'UCOW'.
 	/* Exercise 4.13: Your code here. (6/6) */
-	syscall_mem_unmap(0, UCOW);
+	syscall_mem_unmap(0, (void *)UCOW);
 
 	// Step 7: Return to the faulting routine.
 	int r = syscall_set_trapframe(0, tf);
@@ -99,10 +99,10 @@ static void duppage(u_int envid, u_int vpn) {
 		perm -= PTE_D;
 		r = 1;
 	}
-	syscall_mem_map(0, addr, envid, addr, perm);
+	syscall_mem_map(0, (void *)addr, envid, (void *)addr, perm);
 	if (r)
 	{
-		syscall_mem_map(0, addr, 0, addr, perm);
+		syscall_mem_map(0, (void *)addr, 0, (void *)addr, perm);
 	}
 }
 
