@@ -8,7 +8,8 @@ USERLIB              := entry.o \
 			libos.o \
 			fork.o \
 			syscall_lib.o \
-			ipc.o
+			ipc.o \
+			path.o
 
 ifeq ($(call lab-ge,5), true)
 	INITAPPS     += devtst.x fstest.x
@@ -32,8 +33,15 @@ ifeq ($(call lab-ge,6), true)
 			echo.b \
 			halt.b \
 			ls.b \
+			tree.b \
 			sh.b  \
 			cat.b \
+			mkdir.b \
+			touch.b \
+			history.b \
+			declare.b \
+			unset.b \
+			pwd.b \
 			testpipe.b \
 			testpiperace.b \
 			testptelibrary.b \

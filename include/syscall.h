@@ -22,6 +22,12 @@ enum {
 	SYS_cgetc,
 	SYS_write_dev,
 	SYS_read_dev,
+	SYS_create_shell_id,
+	SYS_declare_env_value,
+	SYS_unset_env_value,
+	SYS_get_env_value,
+	SYS_get_cur_path,
+	SYS_set_cur_path,
 	MAX_SYSNO,
 };
 

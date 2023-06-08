@@ -34,7 +34,6 @@ void schedule(int yield) {
 	 * You may want to use macros below:
 	 *   'TAILQ_FIRST', 'TAILQ_REMOVE', 'TAILQ_INSERT_TAIL'
 	 */
-	/* Exercise 3.12: Your code here. */
 	if (yield || count <= 0 || e == NULL || e->env_status != ENV_RUNNABLE)
 	{
 		if (e != NULL)
@@ -50,6 +49,10 @@ void schedule(int yield) {
 			panic("no runnable envs");
 		}
 		e = TAILQ_FIRST(&env_sched_list);
+		
+		// Lab6 challenge cur_path
+		// strcpy(cur_path, e->env_cur_path);
+
 		count = e->env_pri;
 	}
 	count--;

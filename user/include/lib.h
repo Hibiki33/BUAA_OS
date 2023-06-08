@@ -69,6 +69,16 @@ int syscall_cgetc();
 int syscall_write_dev(void *, u_int, u_int);
 int syscall_read_dev(void *, u_int, u_int);
 
+// for env_value
+int syscall_create_shell_id();
+int syscall_declare_env_value(char *name, char *value, int shell_id, int mood);
+int syscall_unset_env_value(char *name, int shell_id);
+int syscall_get_env_value(char *name, int shell_id, char *buf);
+
+// for cur_path
+int syscall_get_cur_path(char *buf);
+int syscall_set_cur_path(char *path);
+
 // ipc.c
 void ipc_send(u_int whom, u_int val, const void *srcva, u_int perm);
 u_int ipc_recv(u_int *whom, void *dstva, u_int *perm);
@@ -100,6 +110,7 @@ int fsipc_dirty(u_int, u_int);
 int fsipc_remove(const char *);
 int fsipc_sync(void);
 int fsipc_incref(u_int);
+int fsipc_create(const char *, int);
 
 // fd.c
 int close(int fd);
@@ -114,10 +125,16 @@ int stat(const char *path, struct Stat *);
 
 // file.c
 int open(const char *path, int mode);
+int create(const char *path, int f_type);
 int read_map(int fd, u_int offset, void **blk);
 int remove(const char *path);
 int ftruncate(int fd, u_int size);
 int sync(void);
+
+// path.c
+int chdir(char *path);
+int getcwd(char *buf);
+void pathcat(char *path, const char *suffix);
 
 #define user_assert(x)                                                                             \
 	do {                                                                                       \
@@ -130,6 +147,8 @@ int sync(void);
 #define O_WRONLY 0x0001	 /* open for writing only */
 #define O_RDWR 0x0002	 /* open for reading and writing */
 #define O_ACCMODE 0x0003 /* mask for above modes */
+
+#define O_APPEND 0x0004	 /* open for append writing */
 
 // Unimplemented open modes
 #define O_CREAT 0x0100 /* create if nonexistent */

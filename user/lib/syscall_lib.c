@@ -74,3 +74,29 @@ int syscall_read_dev(void *va, u_int dev, u_int len) {
 	/* Exercise 5.2: Your code here. (2/2) */
 	return msyscall(SYS_read_dev, va, dev, len);
 }
+
+// for env_value
+int syscall_create_shell_id() {
+	return msyscall(SYS_create_shell_id);
+}
+
+int syscall_declare_env_value(char *name, char *value, int shell_id, int mood) {
+	return msyscall(SYS_declare_env_value, name, value, shell_id, mood);
+}
+
+int syscall_unset_env_value(char *name, int shell_id) {
+	return msyscall(SYS_unset_env_value, name, shell_id);
+}
+
+int syscall_get_env_value(char *name, int shell_id, char *buf) {
+	return msyscall(SYS_get_env_value, name, shell_id, buf);
+}
+
+// for cur_path
+int syscall_get_cur_path(char *buf) {
+	return msyscall(SYS_get_cur_path, buf);
+}
+
+int syscall_set_cur_path(char *path) {
+	return msyscall(SYS_set_cur_path, path);
+}

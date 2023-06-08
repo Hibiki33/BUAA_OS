@@ -116,6 +116,19 @@ void serve_open(u_int envid, struct Fsreq_open *rq) {
 	ipc_send(envid, 0, o->o_ff, PTE_D | PTE_LIBRARY);
 }
 
+void serve_create(u_int envid, struct Fsreq_create *rq) {
+	int r;
+	struct File *f;
+
+	if ((r = file_create(rq->req_path, &f)) < 0) {
+		ipc_send(envid, r, 0, 0);
+		return;
+	}
+
+	f->f_type = rq->f_type;
+	ipc_send(envid, 0, 0, 0);
+}
+
 void serve_map(u_int envid, struct Fsreq_map *rq) {
 	struct Open *pOpen;
 	u_int filebno;
@@ -218,6 +231,10 @@ void serve(void) {
 		switch (req) {
 		case FSREQ_OPEN:
 			serve_open(whom, (struct Fsreq_open *)REQVA);
+			break;
+
+		case FSREQ_CREATE:
+			serve_create(whom, (struct Fsreq_create *)REQVA);
 			break;
 
 		case FSREQ_MAP:

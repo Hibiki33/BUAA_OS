@@ -254,21 +254,20 @@ int sys_exofork(void) {
 	struct Env *e;
 
 	/* Step 1: Allocate a new env using 'env_alloc'. */
-	/* Exercise 4.9: Your code here. (1/4) */
 	try(env_alloc(&e, curenv->env_id));
 
 	/* Step 2: Copy the current Trapframe below 'KSTACKTOP' to the new env's 'env_tf'. */
-	/* Exercise 4.9: Your code here. (2/4) */
 	e->env_tf = *((struct Trapframe *)KSTACKTOP - 1);
 
 	/* Step 3: Set the new env's 'env_tf.regs[2]' to 0 to indicate the return value in child. */
-	/* Exercise 4.9: Your code here. (3/4) */
 	e->env_tf.regs[2] = 0;
 
 	/* Step 4: Set up the new env's 'env_status' and 'env_pri'.  */
-	/* Exercise 4.9: Your code here. (4/4) */
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
+
+	/* Set up the new env's 'env_cur_path' for shell */
+	// strcpy(e->env_cur_path, cur_path);
 
 	return e->env_id;
 }
@@ -533,6 +532,183 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 	return 0;
 }
 
+// for env_value
+#ifndef _ENV_VALUE_
+#define _ENV_VALUE_
+
+#define MAX_VALUE_NUM	128
+#define MAX_NAME_LEN	32
+#define MAX_VALUE_LEN	32
+#define MAX_GET_RET_LEN	256
+#define E_ENV_VALUE		20
+
+static int shell_num = 1;
+static int env_value_num = 0;
+
+struct ENV_VALUE{
+	char name[MAX_NAME_LEN];
+	char value[MAX_VALUE_LEN];
+	int shell_id;	// 0: global
+	int mood; 		// 1: read only
+	int valid; 		// 1: is valid
+} env_value[MAX_VALUE_NUM];
+
+/* Overview:
+ *	To create a new shell if for the new shell.
+ *	The id '0' indicates the 'global' env_value.
+ */
+int sys_create_shell_id() {
+	return shell_num++;
+}
+
+/* Overview:
+ *	To declare a new env_value.
+ *	If the name has already been declared, redeclared it.
+ */
+int sys_declare_env_value(char *name, char *value, int shell_id, int mood) {
+	int dec_id = -1;
+
+	for (int i = 0; i < env_value_num; i++) {
+		if (strcmp(env_value[i].name, name) == 0 && env_value[i].valid) {
+			// if the env_value is readonly, it can't be redeclared.
+			if (env_value[i].mood) {
+				return -E_ENV_VALUE;
+			}
+			dec_id = i;
+			break;
+		}
+	}
+
+	if (dec_id == -1) {
+		dec_id = env_value_num;
+	}
+	
+	strcpy(env_value[dec_id].name, name);
+	strcpy(env_value[dec_id].value, value);
+	env_value[dec_id].shell_id = shell_id;
+	env_value[dec_id].mood = mood;
+	env_value[dec_id].valid = 1;
+
+	if (dec_id == env_value_num) {
+		env_value_num++;
+	}
+	
+	return 0;
+}
+
+/* Overview:
+ *	To unset an env_value.
+ *	Simply set the env_value to invalid(valid = 0).
+ *  If the shell(with id) doesn't has the permission, 
+ * 	or the target env_value doesn't exist, return -E_ENV_VALUE.
+ */
+int sys_unset_env_value(char *name, int shell_id) {
+	for (int i = 0; i < env_value_num; i++) {
+		if ((env_value[i].shell_id == shell_id || !env_value[i].shell_id) && env_value[i].valid) {
+			if (strcmp(env_value[i].name, name) == 0) {
+				if (env_value[i].mood) {
+					return -E_ENV_VALUE;
+				}
+				env_value[i].valid = 0;
+				return 0;
+			}
+		}
+	}
+
+	return -E_ENV_VALUE;
+}
+
+/* Overview:
+ *	To get an env_value.
+ *	Set *buf to return value;
+ * 
+ * Name:
+ *	NULL: Get all env_value limited with shell_id.
+ *	name: Get specific env_value limited with name and shell_id.
+ *
+ * Return:
+ * 	Return -E_ENV_VALUE if error, otherwise return length of buf;
+ */
+int sys_get_env_value(char *name, int shell_id, char *buf) {
+	char *s = buf;
+
+	if (!name) {
+		for (int i = 0; i < env_value_num; i++) {
+			if ((env_value[i].shell_id == shell_id || !env_value[i].shell_id) && env_value[i].valid) {
+				// name: _name_ value: _value_ mood: [w][x]"
+				strcpy(s, "name: ");
+				s += 6;
+				strcpy(s, env_value[i].name);
+				s += strlen(env_value[i].name);
+				strcpy(s, "  value: ");
+				s += 9;
+				strcpy(s, env_value[i].value);
+				s += strlen(env_value[i].value);
+				strcpy(s, "  mood: ");
+				s += 8;
+				if (env_value[i].mood == 1) {
+					*s++ = 'w';
+				}
+				if (env_value[i].shell_id == 0) {
+					*s++ = 'x';
+				}
+				*s++ = '\n';
+			}
+		}
+		return strlen(s);
+	} else {
+		for (int i = 0; i < env_value_num; i++) {
+			if ((env_value[i].shell_id == shell_id || !env_value[i].shell_id) 
+				&& env_value[i].valid && strcmp(env_value[i].name, name) == 0) {
+				strcpy(buf, env_value[i].value);
+				return strlen(s);
+			}
+		}
+	}
+
+	return -E_ENV_VALUE;
+}
+
+#endif // _ENV_VALUE_
+
+#ifndef _CUR_PATH_
+#define _CUR_PATH_
+
+#define MAX_PATH_LEN	128
+#define E_CUR_PATH		21
+
+/* Overview:
+ *	To get the cur_path.
+ *  Set buf to cur_path.
+ *
+ * Return:
+ * 	Return -E_CUR_PATH if error, otherwise return 0.
+ */
+int sys_get_cur_path(char *buf) {
+	// strcpy(buf, curenv->env_cur_path);
+	strcpy(buf, cur_path);
+	return 0;
+}
+
+/* Overview:
+ *	To change the cur_path to path.
+ *
+ * Return:
+ * 	Return -E_CUR_PATH if error, otherwise return 0.
+ */
+int sys_set_cur_path(char *path) {
+	if (strlen(path) >= MAX_PATH_LEN) {
+		return -E_CUR_PATH;
+	}
+
+	// strcpy(curenv->env_cur_path, path);
+	strcpy(cur_path, path);
+
+	return 0;
+}
+
+#endif // _CUR_PATH_
+
 void *syscall_table[MAX_SYSNO] = {
     [SYS_putchar] = sys_putchar,
     [SYS_print_cons] = sys_print_cons,
@@ -552,6 +728,12 @@ void *syscall_table[MAX_SYSNO] = {
     [SYS_cgetc] = sys_cgetc,
     [SYS_write_dev] = sys_write_dev,
     [SYS_read_dev] = sys_read_dev,
+	[SYS_create_shell_id] = sys_create_shell_id,
+	[SYS_declare_env_value] = sys_declare_env_value,
+	[SYS_unset_env_value] = sys_unset_env_value,
+	[SYS_get_env_value] = sys_get_env_value,
+	[SYS_get_cur_path] = sys_get_cur_path,
+	[SYS_set_cur_path] = sys_set_cur_path,
 };
 
 /* Overview:

@@ -18,6 +18,9 @@ static struct Env_list env_free_list; // Free list
 // Invariant: 'env' in 'env_sched_list' iff. 'env->env_status' is 'RUNNABLE'.
 struct Env_sched_list env_sched_list; // Runnable list
 
+// For lab6 challenge
+char cur_path[128];
+
 static Pde *base_pgdir;
 
 static uint32_t asid_bitmap[NASID / 32] = {0}; // 64

@@ -105,8 +105,29 @@ int spawn(char *prog, char **argv) {
 	// Step 1: Open the file 'prog' (the path of the program).
 	// Return the error if 'open' fails.
 	int fd;
-	if ((fd = open(prog, O_RDONLY)) < 0) {
-		return fd;
+	// if ((fd = open(prog, O_RDONLY)) < 0) {
+	// 	return fd;
+	// }
+
+	if ((fd = open(prog, O_RDONLY)) < 0) 
+	{
+		char fd_default[128];
+		if (prog[0] != '/') {
+			fd_default[0] = '/';
+			strcpy(fd_default + 1, prog);
+		} else {
+			strcpy(fd_default, prog);
+		}
+		int fd_len = strlen(fd_default);
+		fd_default[fd_len] = '.';
+		fd_default[fd_len + 1] = 'b';
+		fd_default[fd_len + 2] = 0;
+
+		// debugf("%s", fd_default);
+		if ((fd = open(fd_default, O_RDONLY)) < 0)
+		{
+			return fd;
+		}
 	}
 
 	// Step 2: Read the ELF header (of type 'Elf32_Ehdr') from the file into 'elfbuf' using

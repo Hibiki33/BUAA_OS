@@ -57,7 +57,7 @@ void ls1(char *prefix, u_int isdir, u_int size, char *name) {
 	if (flag['F'] && isdir) {
 		printf("/");
 	}
-	printf(" ");
+	printf("  ");
 }
 
 void usage(void) {
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 	ARGEND
 
 	if (argc == 0) {
-		ls("/", "");
+		ls("./", "");
 	} else {
 		for (i = 0; i < argc; i++) {
 			ls(argv[i], argv[i]);
