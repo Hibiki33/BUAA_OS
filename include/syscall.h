@@ -19,6 +19,7 @@ enum {
 	SYS_panic,
 	SYS_ipc_try_send,
 	SYS_ipc_recv,
+	SYS_barrier,
 	SYS_cgetc,
 	SYS_write_dev,
 	SYS_read_dev,

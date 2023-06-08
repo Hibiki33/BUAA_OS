@@ -68,6 +68,7 @@ int syscall_ipc_recv(void *dstva);
 int syscall_cgetc();
 int syscall_write_dev(void *, u_int, u_int);
 int syscall_read_dev(void *, u_int, u_int);
+int syscall_barrier(int n);
 
 // ipc.c
 void ipc_send(u_int whom, u_int val, const void *srcva, u_int perm);
@@ -118,6 +119,9 @@ int read_map(int fd, u_int offset, void **blk);
 int remove(const char *path);
 int ftruncate(int fd, u_int size);
 int sync(void);
+
+void barrier_alloc(int n);
+void barrier_wait(void);
 
 #define user_assert(x)                                                                             \
 	do {                                                                                       \

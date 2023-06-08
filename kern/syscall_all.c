@@ -292,8 +292,8 @@ int sys_set_env_status(u_int envid, u_int status) {
 	/* Exercise 4.14: Your code here. (1/3) */
 	if (status != ENV_RUNNABLE && status != ENV_NOT_RUNNABLE) 
 	{
-        return -E_INVAL;
-    }
+        	return -E_INVAL;
+    	}
 
 	/* Step 2: Convert the envid to its corresponding 'struct Env *' using 'envid2env'. */
 	/* Exercise 4.14: Your code here. (2/3) */
@@ -303,8 +303,8 @@ int sys_set_env_status(u_int envid, u_int status) {
 	/* Exercise 4.14: Your code here. (3/3) */
 	if (status == ENV_RUNNABLE && env->env_status != ENV_RUNNABLE) 
 	{
-        TAILQ_INSERT_TAIL(&env_sched_list, env, env_sched_link);
-    }
+        	TAILQ_INSERT_TAIL(&env_sched_list, env, env_sched_link);
+    	}
 	else if (status != ENV_RUNNABLE && env->env_status == ENV_RUNNABLE)
 	{
 		TAILQ_REMOVE(&env_sched_list, env, env_sched_link);
@@ -509,6 +509,38 @@ int sys_read_dev(u_int va, u_int pa, u_int len) {
 	return 0;
 }
 
+int sys_barrier(int n) {
+	static int barrier;
+	static int env_cnt;
+	static int is_valid;
+	static u_int block_envs[100];
+	if (is_valid == -1) {
+		return 0;
+	}
+	if (n < 0) {
+		int r = 0;
+		for (int i = 0; i < env_cnt; i++) {
+			if (block_envs[i] == curenv->env_id) {
+				r = 1;
+				break;
+			}
+		}
+		if (r == 0) {
+			block_envs[env_cnt++] = curenv->env_id;
+			if (env_cnt >= barrier) {
+				is_valid = -1;
+				return 0;
+			}		
+		}
+		return -1;
+	} else {
+		barrier = n;
+		env_cnt = 0;
+		is_valid = 1;
+	}
+	return 0;
+}
+
 void *syscall_table[MAX_SYSNO] = {
     [SYS_putchar] = sys_putchar,
     [SYS_print_cons] = sys_print_cons,
@@ -525,6 +557,7 @@ void *syscall_table[MAX_SYSNO] = {
     [SYS_panic] = sys_panic,
     [SYS_ipc_try_send] = sys_ipc_try_send,
     [SYS_ipc_recv] = sys_ipc_recv,
+    [SYS_barrier] = sys_barrier,
     [SYS_cgetc] = sys_cgetc,
     [SYS_write_dev] = sys_write_dev,
     [SYS_read_dev] = sys_read_dev,

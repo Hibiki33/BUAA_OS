@@ -130,9 +130,11 @@ int fork(void) {
 	/* Step 2: Create a child env that's not ready to be scheduled. */
 	// Hint: 'env' should always point to the current env itself, so we should fix it to the
 	// correct value.
+//	syscall_barrier(-1);
 	child = syscall_exofork();
 	if (child == 0) {
 		env = envs + ENVX(syscall_getenvid());
+//		syscall_barrier(-2);
 		return 0;
 	}
 
