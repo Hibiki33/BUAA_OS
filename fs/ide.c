@@ -7,6 +7,116 @@
 #include <lib.h>
 #include <mmu.h>
 
+#define ssd_diskno 0
+
+u_int ssd_list[32];
+u_int ssd_bitmap[32];
+u_int ssd_times[32];
+char *space[512];
+
+void ssd_init()
+{
+
+}
+
+int ssd_read(u_int logic_no, void *dst)
+{
+	for (int i = 0; i < 32; i++)
+	{
+		if (ssd_bitmap[i] && ssd_list[i] == logic_no)
+		{
+			ide_read(ssd_diskno, i, dst, 1);	
+			return 0;
+		}
+	}
+	return -1;
+}
+
+void ssd_write(u_int logic_no, void *src)
+{
+	for (int i = 0; i < 32; i++)
+	{
+        	if (ssd_bitmap[i] && ssd_list[i] == logic_no)
+                {
+                	ide_write(ssd_diskno, i, space, 1);
+			ssd_list[i] = 0;
+			ssd_bitmap[i] = 0;
+			ssd_times[i] += 1;
+			break;
+        	}
+ 	}
+
+	u_int min = 100000000;
+	u_int min_phy_no = 0;
+	for (int i = 0; i < 32; i++)
+	{
+		if (ssd_bitmap[i])
+		{
+			continue;
+		}
+		if (min > ssd_times[i])
+		{
+			min = ssd_times[i];
+			min_phy_no = i;
+		}
+	}
+
+	if (min < 5)
+	{
+		ssd_list[min_phy_no] = logic_no;
+		ssd_bitmap[min_phy_no] = 1;
+		ide_write(ssd_diskno, min_phy_no, src, 1);
+	}
+	else
+	{
+		u_int _min = 100000000;
+		u_int _min_phy_no = 0;
+		for (int i = 0; i < 32; i++)
+		{
+			if (!ssd_bitmap[i])
+			{
+				continue;
+			}
+			if (_min > ssd_times[i])
+			{
+				_min = ssd_times[i];
+				_min_phy_no = i;
+			}
+		}
+
+		char *tmp[512];
+		ide_read(ssd_diskno, _min_phy_no, tmp, 1);
+		ide_write(ssd_diskno, min_phy_no, tmp, 1);
+
+		ssd_list[min_phy_no] = ssd_list[_min_phy_no];
+		ssd_bitmap[min_phy_no] = 1;
+
+		ssd_list[_min_phy_no] = 0;
+		ssd_bitmap[_min_phy_no] = 0;
+		ssd_times[_min_phy_no] += 1;
+		ide_write(ssd_diskno, _min_phy_no, space, 1);
+
+		ssd_list[_min_phy_no] = logic_no;
+		ssd_bitmap[_min_phy_no] = 1;
+		ide_write(ssd_diskno, _min_phy_no, src, 1);
+	}
+}
+
+void ssd_erase(u_int logic_no)
+{
+	for (int i = 0; i < 32; i++)
+	{
+		if (ssd_bitmap[i] && ssd_list[i] == logic_no)
+		{
+			ide_write(ssd_diskno, i, space, 1);		
+			ssd_list[i] = 0;
+			ssd_bitmap[i] = 0;
+			ssd_times[i] += 1;
+			return;
+		}
+	}
+}
+
 // Overview:
 //  read data from IDE disk. First issue a read request through
 //  disk register and then copy data from disk buffer
