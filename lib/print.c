@@ -10,11 +10,22 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 	const char *s;
 	long num;
 
+	long num1;
+	long num2;
+
 	int width;
 	int long_flag; // output is long (rather than int)
 	int neg_flag;  // output is negative
 	int ladjust;   // output is left-aligned
 	char padc;     // padding char
+
+	char left;
+	char right;
+	char dh;
+
+	left = '(';
+	right = ')';
+	dh = ',';
 
 	for (;;) {
 		/* scan for the next '%' */
@@ -71,6 +82,8 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 			fmt++;
 		}
 
+		
+
 		neg_flag = 0;
 		switch (*fmt) {
 		case 'b':
@@ -101,6 +114,35 @@ void vprintfmt(fmt_callback_t out, void *data, const char *fmt, va_list ap) {
 				neg_flag = 1;
 			}
 			print_num(out, data, num, 10, neg_flag, width, ladjust, padc, 0);
+			break;
+
+		case 'R':
+			if (long_flag)
+			{
+				num1 = va_arg(ap, long int);
+				num2 = va_arg(ap, long int);		
+			}
+			else
+			{
+				num1 = va_arg(ap, int);
+				num2 = va_arg(ap, int);
+			}
+			out(data, &left, 1);
+			if (num1 < 0)
+			{
+				num1 = 0 - num1;
+				neg_flag = 1;
+			}
+			print_num(out, data, num1, 10, neg_flag, width, ladjust, padc, 0);
+			neg_flag = 0;
+			out(data, &dh, 1);
+			if (num2 < 0)
+			{
+				num2 = 0 - num2;
+				neg_flag = 1;
+			}
+			print_num(out, data, num2, 10, neg_flag, width, ladjust, padc, 0);
+			out(data, &right, 1);
 			break;
 
 		case 'o':
