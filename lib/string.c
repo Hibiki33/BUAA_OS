@@ -1,4 +1,6 @@
 #include <types.h>
+#include <print.h>
+#include <printk.h>
 
 void *memcpy(void *dst, const void *src, size_t n) {
 	void *dstaddr = dst;
@@ -94,4 +96,37 @@ int strcmp(const char *p, const char *q) {
 	}
 
 	return 0;
+}
+
+typedef struct
+{
+	int cnt;
+	char *now_str;	
+} in_str;
+
+void myoutputk(void *data, const char *buf, size_t len)
+{
+	in_str *inp = (in_str *)data;
+	char *str = inp->now_str;
+	for (int i = 0; i < len; i++)
+	{
+		*str++ = buf[i];
+		(inp->cnt)++;
+	}	
+	inp->now_str = str;
+}
+
+int sprintf(char *buf, const char *fmt, ...)
+{
+	in_str in;
+	in.now_str = buf;
+	in.cnt = 0;
+	char *init_pos = buf;
+	va_list ap;
+	va_start(ap, fmt);
+	vprintfmt(myoutputk, &in, fmt, ap);
+	va_end(ap);
+	buf = init_pos;
+	buf[in.cnt] = 0;
+	return in.cnt;
 }
