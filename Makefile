@@ -1,29 +1,40 @@
-.PHONY: clean
+ENDIAN         := EL
+CROSS_COMPILE  := mips-linux-gnu-
+CC             := $(CROSS_COMPILE)gcc
+CFLAGS         += --std=gnu99 -$(ENDIAN) -G 0 -mno-abicalls -fno-pic -ffreestanding -fno-stack-protector -fno-builtin -Wa,-xgot -Wall -mxgot -mfp32 -march=r3000
+LD             := $(CROSS_COMPILE)ld
+LDFLAGS        += -$(ENDIAN) -G 0 -static -n -nostdlib --fatal-warnings
+INCLUDES       := -I./include
 
-out: calc case_all
-	./calc < case_all > out
+gxemul_flags   += -T         # halt on non-existant memory accesses
+gxemul_flags   += -C R3000   # try to emulate a mips r3000 CPU.
+gxemul_flags   += -M 64      # emulate 64 MBs of physical RAM
+gxemul_flags   += -E testmips# try to emulate machine type testmips
 
-# Your code here.
-calc: calc.c
-	gcc -o calc calc.c
+gxemul_files   += $(target)
 
-casegen: casegen.c
-	gcc -o casegen casegen.c
+link_script    := linker.lds
+target         := runbin
 
-case_add: casegen
-	./casegen add 100 > case_add
+objs           := blib.o machine.o start.o test.o
 
-case_sub: casegen
-	./casegen sub 100 > case_sub
+all: $(objs)
+	$(LD) $(LDFLAGS) -o $(target) -N -T $(link_script) $(objs)
 
-case_mul: casegen
-	./casegen mul 100 > case_mul
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $<
 
-case_div: casegen
-	./casegen div 100 > case_div
+%.o: %.S
+	$(CC) $(CFLAGS) $(INCLUDES) -c $<
 
-case_all: case_add case_sub case_mul case_div
-	cat case_add case_sub case_mul case_div > case_all
+dbg: gxemul_flags += -V
+dbg: run
+
+run:
+	gxemul $(gxemul_flags) $(gxemul_files)
 
 clean:
-	rm -f out calc casegen case_*
+	rm -f *.o $(target)
+
+.PHONY: all clean run
+

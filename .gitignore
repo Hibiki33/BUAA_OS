@@ -1,4 +1,3 @@
-case_*
-out
-casegen
-calc
+.vscode
+*.o
+runbin
