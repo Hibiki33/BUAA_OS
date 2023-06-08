@@ -1,0 +1,8 @@
+bad.c: In function ‘main’:
+bad.c:2:9: warning: implicit declaration of function ‘foo’ [-Wimplicit-function-declaration]
+    2 |         foo();
+      |         ^~~
+bad.c:3:9: error: ‘bad’ undeclared (first use in this function)
+    3 |         bad;
+      |         ^~~
+bad.c:3:9: note: each undeclared identifier is reported only once for each function it appears in
