@@ -4,6 +4,44 @@
 #include <lib.h>
 #include <mmu.h>
 
+#define RTC 0x15000000
+#define refresh 0x0000
+#define reads 0x0010
+#define readus 0x0020
+
+u_int get_time(u_int *us)
+{
+	u_int temp = 1;
+	u_int rs;
+	u_int rus;
+	panic_on(syscall_write_dev(&temp, RTC + refresh, 4));
+	panic_on(syscall_read_dev(&rs, RTC + reads, 4));
+	panic_on(syscall_read_dev(&rus, RTC +readus, 4));
+	*us = rus;
+	return rs;
+}
+
+void usleep(u_int us)
+{
+	u_int enter_us;
+	u_int enter_s = get_time(&enter_us);
+	while (1)
+	{
+		u_int present_us;
+		u_int present_s = get_time(&present_us);
+		int delta_time = (int)present_s - (int)enter_s;
+		delta_time = delta_time * 1000000 + (int)present_us - (int)enter_us;
+		if (delta_time >= us)
+		{
+			return;
+		}
+		else
+		{
+			syscall_yield();
+		}
+	}
+}
+
 // Send val to whom.  This function keeps trying until
 // it succeeds.  It should panic() on any error other than
 // -E_IPC_NOT_RECV.

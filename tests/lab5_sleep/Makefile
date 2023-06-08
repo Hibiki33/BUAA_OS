@@ -1,3 +1,3 @@
-targets := fdtest.x
+targets := test.x
 
 include ../include.mk
