@@ -42,6 +42,9 @@ ifeq ($(call lab-ge,6), true)
 			declare.b \
 			unset.b \
 			pwd.b \
+			rm.b \
+			grep.b \
+			find.b \
 			testpipe.b \
 			testpiperace.b \
 			testptelibrary.b \

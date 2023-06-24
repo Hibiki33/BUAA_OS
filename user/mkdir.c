@@ -2,7 +2,7 @@
 
 void usage(void) 
 {
-	printf("usage: mkdir [dirname]\n");
+	debugf("usage: mkdir [dirname]\n");
     exit();
 }
 

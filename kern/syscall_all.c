@@ -457,6 +457,7 @@ int sys_cgetc(void) {
 	while ((ch = scancharc()) == 0) {
 	}
 	return ch;
+	// return scancharc();
 }
 
 /* Overview:

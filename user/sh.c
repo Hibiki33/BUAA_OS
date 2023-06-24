@@ -15,6 +15,9 @@ int shellid;
 // for env_value
 //extern int shellid;
 
+int dup0;
+int dup1;
+
 /* Overview:
  *   Parse the next token from the string at s.
  *
@@ -164,6 +167,14 @@ void gethis(int index, char *cmd) {
 
 int parsecmd(char **argv, int *rightpipe) {
 	int argc = 0;
+	if (dup0) {
+		dup0 = 0;
+		dup(1, 0);
+	} 
+	if (dup1) {
+		dup1 = 0;
+		dup(0, 1);
+	}
 	while (1) {
 		char *t;
 		int fd, r;
@@ -203,6 +214,7 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 			fd = r;
 			dup(fd, 0);
+			dup0 = 1;
 			close(fd);
 			//user_panic("< redirection not implemented");
 			break;
@@ -223,6 +235,7 @@ int parsecmd(char **argv, int *rightpipe) {
 			}
 			fd = r;
 			dup(fd, 1);
+			dup1 = 1;
 			close(fd);
 			//user_panic("> redirection not implemented");
 			break;
@@ -258,10 +271,10 @@ int parsecmd(char **argv, int *rightpipe) {
 			//user_panic("| not implemented");
 			break;
 		case ';':
-			if ((*rightpipe = fork()) == 0) {
+			if ((r = fork()) == 0) {
 				return argc;
 			} else {
-				wait(*rightpipe);
+				wait(r);
 				return parsecmd(argv, rightpipe);
 			}
 			break;
@@ -290,19 +303,13 @@ void runcmd(char *s) {
 	argv[argc] = 0;
 
 	if (strcmp(argv[0], "declare") == 0) {
-		char temp[4] = {
-			(char)(shellid / 100) + '0',
-			(char)(shellid % 100 / 10) + '0',
-			(char)(shellid % 10) + '0', 0};
+		char temp[2] = {(char)shellid, 0};
 		argv[argc++] = temp;
 		argv[argc] = 0;
 	}
 
 	if (strcmp(argv[0], "unset") == 0) {
-		char temp[4] = {
-			(char)(shellid / 100) + '0',
-			(char)(shellid % 100 / 10) + '0',
-			(char)(shellid % 10) + '0', 0};
+		char temp[2] = {(char)shellid, 0};
 		argv[argc++] = temp;
 		argv[argc] = 0;
 	}

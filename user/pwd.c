@@ -1,7 +1,7 @@
 #include <lib.h>
 
 void usage(void) {
-    printf("usage: pwd\n");
+    debugf("usage: pwd\n");
     exit();
 }
 
@@ -13,10 +13,10 @@ int main(int argc, char **argv) {
 		usage();
 	} else {
 		if ((r = getcwd(buf)) < 0) {
-            printf("get path failed: %d\n", r);
+            debugf("get path failed: %d\n", r);
             exit();
         }
-        printf("%s\n", buf);
+        debugf("%s\n", buf);
 	}
 
     return 0;

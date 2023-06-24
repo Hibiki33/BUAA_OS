@@ -22,7 +22,8 @@ int main(int argc, char **argv) {
     } ARGEND
 
     char *s = argv[argc - 1];
-    int shellid = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0');
+    // int shellid = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0');
+    int shellid = (int)s[0];
 
     if (flag['x']) {
         id = 0;

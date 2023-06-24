@@ -272,7 +272,13 @@ int remove(const char *path) {
 	// Your code here.
 	// Call fsipc_remove.
 
-	/* Exercise 5.13: Your code here. */
+	if (path[0] != '/') {
+		char dpath[128];
+		try(getcwd(dpath));
+		pathcat(dpath, path);
+		return fsipc_remove(dpath);
+	}
+
 	return fsipc_remove(path);
 }
 

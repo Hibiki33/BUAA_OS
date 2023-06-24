@@ -15,13 +15,13 @@ void tree(char *path) {
     }
     
     if (!st.st_isdir) {
-		printf("%s [error opening dir]\n", path);
-        printf("0 directories, 0 files\n");
+		debugf("%s [error opening dir]\n", path);
+        debugf("0 directories, 0 files\n");
         exit();
     }
 	
     // dircnt += 1;
-    printf("%s\n", path);
+    debugf("%s\n", path);
     treedir(path, 0);
 }
 
@@ -56,9 +56,9 @@ void tree1(char *path, u_int isdir, char *name, int step) {
     }
 
     for (int i = 0; i < step - 1; i++) {
-        printf("    ");
+        debugf("    ");
     }
-    printf("|-- ");
+    debugf("|-- ");
 
     if (path[0] && path[strlen(path) - 1] != '/') {
 		sep = "/";
@@ -67,9 +67,9 @@ void tree1(char *path, u_int isdir, char *name, int step) {
 	}
 
     if (flag['f'] && path) {
-		printf("%s%s", path, sep);
+		debugf("%s%s", path, sep);
     }
-    printf("%s\n", name);
+    debugf("%s\n", name);
 
     if (isdir) {
         dircnt += 1;
@@ -100,7 +100,7 @@ void tree1(char *path, u_int isdir, char *name, int step) {
 
 void usage(void) 
 {
-	printf("usage: tree [-adf] [directory...]\n");
+	debugf("usage: tree [-adf] [directory...]\n");
     exit();
 }
 
@@ -119,27 +119,24 @@ int main(int argc, char **argv)
     }
     ARGEND
         
-    if (argc == 0)
-    {
+    if (argc == 0) {
         tree("./");
         if (flag['d']) {
-            printf("\n%d directories\n", dircnt);
+            debugf("\n%d directories\n", dircnt);
         } else {
-            printf("\n%d directories, %d files\n", dircnt, filecnt);
+            debugf("\n%d directories, %d files\n", dircnt, filecnt);
         }
-	}
-    else
-    {
+	} else {
 		for (i = 0; i < argc; i++)
         {
             tree(argv[i]);
             if (flag['d']) {
-                printf("\n%d directories\n", dircnt);
+                debugf("\n%d directories\n", dircnt);
             } else {
-                printf("\n%d directories, %d files\n", dircnt, filecnt);
+                debugf("\n%d directories, %d files\n", dircnt, filecnt);
             }
 		}
     }
-	printf("\n");
+	debugf("\n");
 	return 0;
 }
